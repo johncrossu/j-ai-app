@@ -1,0 +1,43 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 35
+    buildToolsVersion "34.0.0"
+
+    defaultConfig {
+        applicationId "com.johncross.jai"
+        minSdkVersion 21
+        targetSdkVersion 35
+        versionCode 200
+        versionName "2.0"
+    }
+
+    signingConfigs {
+        release {
+            storeFile file("j-ai-release.jks")
+            storePassword "johncross123"
+            keyAlias "j-ai"
+            keyPassword "johncross123"
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.release
+        }
+        debug {
+            applicationIdSuffix ""
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'androidx.webkit:webkit:1.8.0'
+}

@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>J-AI</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  :root {
+    --bg:      #0C0E15;
+    --surface: #151720;
+    --card:    #1C2029;
+    --accent:  #00C8B4;
+    --text:    #EDEDED;
+    --muted:   #8A8E9A;
+    --user-bg: #1E3B6E;
+    --ai-bg:   #151D26;
+    --red:     #EF4444;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* HEADER */
+  .header {
+    background: var(--surface);
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 56px;
+    flex-shrink: 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+
+  .menu-btn {
+    background: none;
+    border: none;
+    color: var(--accent);
+    font-size: 22px;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 8px;
+  }
+
+  .avatar {
+    width: 36px; height: 36px;
+    background: var(--accent);
+    border-radius: 18px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: bold; color: #000; font-size: 16px;
+    flex-shrink: 0;
+  }
+
+  .title {
+    color: var(--accent);
+    font-size: 18px;
+    font-weight: bold;
+    flex-shrink: 0;
+  }
+
+  .api-status {
+    color: var(--muted);
+    font-size: 11px;
+    flex: 1;
+    text-align: right;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .gear-btn {
+    background: none;
+    border: none;
+    color: var(--accent);
+    font-size: 20px;
+    cursor: pointer;
+    padding: 4px;
+  }
+
+  /* MESSAGES */
+  .messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .messages::-webkit-scrollbar { width: 3px; }
+  .messages::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 2px; }
+
+  .bubble-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    padding: 2px 0;
+  }
+
+  .bubble-row.user { justify-content: flex-end; }
+  .bubble-row.ai   { justify-content: flex-start; }
+
+  .bubble-avatar {
+    width: 28px; height: 28px;
+    background: var(--accent);
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: bold; color: #000; font-size: 12px;
+    flex-shrink: 0;
+  }
+
+  .bubble-wrap { display: flex; flex-direction: column; max-width: 75%; }
+
+  .bubble {
+    padding: 10px 14px;
+    border-radius: 16px;
+    font-size: 14px;
+    line-height: 1.5;
+    word-break: break-word;
+    white-space: pre-wrap;
+  }
+
+  .bubble.user {
+    background: var(--user-bg);
+    border-bottom-right-radius: 4px;
+    color: var(--text);
+  }
+
+  .bubble.ai {
+    background: var(--ai-bg);
+    border-bottom-left-radius: 4px;
+    color: var(--text);
+    border: 1px solid rgba(255,255,255,0.05);
+  }
+
+  .bubble-actions {
+    display: flex;
+    gap: 4px;
+    margin-top: 3px;
+    padding: 0 4px;
+  }
+
+  .action-btn {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 11px;
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+
+  .action-btn:active { background: rgba(255,255,255,0.1); }
+
+  .bubble-meta {
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 3px;
+    padding: 0 4px;
+  }
+
+  /* CODE BLOCKS */
+  .code-block {
+    background: #0D1117;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    margin: 6px 0;
+    overflow: hidden;
+  }
+
+  .code-header {
+    background: rgba(255,255,255,0.05);
+    padding: 6px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    color: var(--accent);
+  }
+
+  .copy-code-btn {
+    background: var(--accent);
+    color: #000;
+    border: none;
+    padding: 3px 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+
+  pre {
+    padding: 12px;
+    overflow-x: auto;
+    font-size: 12px;
+    color: #E0E0F0;
+    font-family: 'Courier New', monospace;
+  }
+
+  /* SUGGESTIONS */
+  .suggestions {
+    background: var(--surface);
+    padding: 6px 8px;
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    flex-shrink: 0;
+    -webkit-overflow-scrolling: touch;
+    border-top: 1px solid rgba(255,255,255,0.05);
+  }
+
+  .suggestions::-webkit-scrollbar { display: none; }
+
+  .sugg-btn {
+    background: var(--card);
+    color: var(--accent);
+    border: none;
+    padding: 6px 14px;
+    border-radius: 16px;
+    font-size: 11px;
+    font-weight: bold;
+    white-space: nowrap;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .sugg-btn:active { background: var(--accent); color: #000; }
+
+  /* INPUT BAR */
+  .input-bar {
+    background: var(--surface);
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+    border-top: 1px solid rgba(255,255,255,0.05);
+  }
+
+  .attach-btn, .mic-btn {
+    background: none;
+    border: none;
+    color: var(--accent);
+    font-size: 20px;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 8px;
+    flex-shrink: 0;
+  }
+
+  .attach-btn:active, .mic-btn:active { background: rgba(0,200,180,0.1); }
+
+  #messageInput {
+    flex: 1;
+    background: var(--card);
+    color: var(--text);
+    border: none;
+    border-radius: 22px;
+    padding: 10px 16px;
+    font-size: 15px;
+    outline: none;
+    resize: none;
+    min-height: 44px;
+    max-height: 120px;
+    font-family: inherit;
+  }
+
+  #messageInput::placeholder { color: var(--muted); }
+
+  .send-btn {
+    width: 44px; height: 44px;
+    background: var(--accent);
+    color: #000;
+    border: none;
+    border-radius: 22px;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .send-btn:active { opacity: 0.8; }
+
+  /* TYPING INDICATOR */
+  .typing {
+    display: flex; gap: 4px; padding: 10px 14px;
+    background: var(--ai-bg);
+    border-radius: 16px;
+    border-bottom-left-radius: 4px;
+    width: fit-content;
+  }
+
+  .typing span {
+    width: 8px; height: 8px;
+    background: var(--accent);
+    border-radius: 4px;
+    animation: bounce 1s infinite;
+  }
+
+  .typing span:nth-child(2) { animation-delay: 0.2s; }
+  .typing span:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes bounce {
+    0%, 60%, 100% { transform: translateY(0); }
+    30% { transform: translateY(-6px); }
+  }
+
+  /* DRAWER */
+  .drawer-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 100;
+    display: none;
+  }
+
+  .drawer-overlay.open { display: block; }
+
+  .drawer {
+    position: fixed;
+    top: 0; left: -80%;
+    width: 78%;
+    height: 100%;
+    background: var(--surface);
+    z-index: 101;
+    transition: left 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    padding: 50px 0 20px;
+    border-right: 1px solid rgba(255,255,255,0.05);
+  }
+
+  .drawer.open { left: 0; }
+
+  .drawer-user {
+    padding: 0 16px 16px;
+    font-size: 16px;
+    font-weight: bold;
+    color: var(--text);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    margin-bottom: 8px;
+  }
+
+  .drawer-item {
+    padding: 13px 16px;
+    font-size: 14px;
+    color: var(--text);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .drawer-item:active { background: rgba(255,255,255,0.05); }
+
+  /* SETTINGS PANEL */
+  .panel-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 200;
+    display: none;
+    align-items: flex-end;
+  }
+
+  .panel-overlay.open { display: flex; }
+
+  .panel {
+    background: var(--surface);
+    width: 100%;
+    max-height: 90vh;
+    border-radius: 20px 20px 0 0;
+    overflow-y: auto;
+    padding: 16px;
+  }
+
+  .panel-title {
+    font-size: 16px;
+    font-weight: bold;
+    color: var(--accent);
+    margin-bottom: 16px;
+    text-align: center;
+  }
+
+  .panel-section {
+    font-size: 11px;
+    color: var(--accent);
+    font-weight: bold;
+    margin: 14px 0 6px;
+    text-transform: uppercase;
+  }
+
+  .panel-input {
+    width: 100%;
+    background: var(--card);
+    color: var(--text);
+    border: none;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 14px;
+    outline: none;
+    font-family: inherit;
+  }
+
+  .panel-select {
+    width: 100%;
+    background: var(--card);
+    color: var(--text);
+    border: none;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 14px;
+    outline: none;
+    appearance: none;
+  }
+
+  .panel-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0;
+  }
+
+  .panel-row label { font-size: 13px; color: var(--text); }
+
+  .toggle {
+    width: 48px; height: 26px;
+    background: var(--card);
+    border-radius: 13px;
+    position: relative;
+    cursor: pointer;
+    border: none;
+    transition: background 0.3s;
+  }
+
+  .toggle.on { background: var(--accent); }
+
+  .toggle::after {
+    content: '';
+    position: absolute;
+    width: 20px; height: 20px;
+    background: #fff;
+    border-radius: 10px;
+    top: 3px; left: 3px;
+    transition: left 0.3s;
+  }
+
+  .toggle.on::after { left: 25px; }
+
+  .panel-btn {
+    width: 100%;
+    padding: 12px;
+    border-radius: 10px;
+    border: none;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 8px;
+  }
+
+  .panel-btn.primary { background: var(--accent); color: #000; }
+  .panel-btn.danger  { background: rgba(239,68,68,0.15); color: var(--red); }
+  .panel-btn.muted   { background: var(--card); color: var(--muted); }
+
+  /* ATTACH MENU */
+  .attach-menu {
+    position: fixed;
+    bottom: 70px;
+    left: 8px;
+    background: var(--surface);
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.1);
+    overflow: hidden;
+    z-index: 50;
+    display: none;
+  }
+
+  .attach-menu.open { display: block; }
+
+  .attach-item {
+    padding: 13px 20px;
+    font-size: 14px;
+    color: var(--text);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+
+  .attach-item:last-child { border-bottom: none; }
+  .attach-item:active { background: rgba(255,255,255,0.05); }
+
+  /* IMAGE */
+  .bubble img {
+    max-width: 100%;
+    border-radius: 8px;
+    margin-top: 8px;
+  }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--accent);
+    color: #000;
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: bold;
+    z-index: 300;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <button class="menu-btn" onclick="toggleDrawer()">☰</button>
+  <div class="avatar">J</div>
+  <div class="title">J-AI</div>
+  <div class="api-status" id="apiStatus">ready</div>
+  <button class="gear-btn" onclick="openSettings()">⚙</button>
+</div>
+
+<!-- MESSAGES -->
+<div class="messages" id="messages"></div>
+
+<!-- SUGGESTIONS -->
+<div class="suggestions" id="suggestions"></div>
+
+<!-- INPUT BAR -->
+<div class="input-bar">
+  <button class="attach-btn" onclick="toggleAttach()">+</button>
+  <textarea id="messageInput" placeholder="Ask J-AI anything..." rows="1"
+    oninput="autoResize(this)"
+    onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage();}">
+  </textarea>
+  <button class="mic-btn" onclick="startVoice()" id="micBtn">🎤</button>
+  <button class="send-btn" onclick="sendMessage()">➤</button>
+</div>
+
+<!-- DRAWER -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-user" id="drawerUser">Johncross</div>
+  <div class="drawer-item" onclick="newChat()">🆕 &nbsp; New Chat</div>
+  <div class="drawer-item" onclick="quickAction('Show me the latest top news headlines')">📰 &nbsp; News</div>
+  <div class="drawer-item" onclick="quickAction('Show me current crypto prices')">₿ &nbsp; Crypto Prices</div>
+  <div class="drawer-item" onclick="quickAction('Search the web for: ')">🔍 &nbsp; Web Search</div>
+  <div class="drawer-item" onclick="quickAction('Translate this text: ')">🌐 &nbsp; Translator</div>
+  <div class="drawer-item" onclick="quickAction('Help me build a professional CV')">📄 &nbsp; Build Document</div>
+  <div class="drawer-item" onclick="quickAction('Generate an image of: ')">🖼 &nbsp; Generate Image</div>
+  <div class="drawer-item" onclick="quickAction('Check this for security issues: ')">🔒 &nbsp; Security Tools</div>
+  <div class="drawer-item" onclick="quickAction('Analyse this data: ')">📊 &nbsp; Data Analysis</div>
+  <div class="drawer-item" onclick="syncNow()">🔄 &nbsp; Sync Now</div>
+  <div class="drawer-item" onclick="exportChat()">📤 &nbsp; Export Chat</div>
+  <div class="drawer-item" onclick="openSettings()">⚙ &nbsp; Settings</div>
+  <div class="drawer-item" onclick="showAbout()">ℹ &nbsp; About J-AI</div>
+</div>
+
+<!-- SETTINGS PANEL -->
+<div class="panel-overlay" id="settingsPanel">
+  <div class="panel">
+    <div class="panel-title">⚙ J-AI Settings</div>
+
+    <div class="panel-section">Your Name</div>
+    <input class="panel-input" id="settingName" type="text" value="Johncross">
+
+    <div class="panel-section">Response Style</div>
+    <select class="panel-select" id="settingStyle">
+      <option>Concise</option>
+      <option>Detailed</option>
+      <option>Bullet Points</option>
+      <option>Friendly</option>
+      <option>Technical</option>
+    </select>
+
+    <div class="panel-section">Personality</div>
+    <select class="panel-select" id="settingPersonality">
+      <option>Direct</option>
+      <option>Friendly</option>
+      <option>Professional</option>
+      <option>Tutor</option>
+      <option>Motivator</option>
+    </select>
+
+    <div class="panel-section">Font Size</div>
+    <div class="panel-row">
+      <label>Size: <span id="fontSizeLabel">14</span>px</label>
+      <input type="range" min="11" max="22" value="14" id="settingFontSize"
+        oninput="document.getElementById('fontSizeLabel').textContent=this.value">
+    </div>
+
+    <div class="panel-section">Response Length</div>
+    <div class="panel-row">
+      <label>Tokens: <span id="tokensLabel">1024</span></label>
+      <input type="range" min="256" max="4096" step="256" value="1024" id="settingTokens"
+        oninput="document.getElementById('tokensLabel').textContent=this.value">
+    </div>
+
+    <div class="panel-section">Auto-Sync</div>
+    <div class="panel-row">
+      <label>Sync data automatically</label>
+      <button class="toggle on" id="toggleSync" onclick="this.classList.toggle('on')"></button>
+    </div>
+
+    <div class="panel-section">Text-to-Speech</div>
+    <div class="panel-row">
+      <label>Read responses aloud</label>
+      <button class="toggle" id="toggleTTS" onclick="this.classList.toggle('on')"></button>
+    </div>
+
+    <div class="panel-section">Custom Prompt</div>
+    <textarea class="panel-input" id="settingPrompt" rows="4"
+      placeholder="Describe how J-AI should behave, your role, preferences..."></textarea>
+
+    <div class="panel-section">Sync</div>
+    <button class="panel-btn muted" onclick="syncNow()">🔄 Sync Now</button>
+
+    <div class="panel-section">Memory</div>
+    <button class="panel-btn danger" onclick="clearHistory()">🗑 Clear All Chat History</button>
+
+    <div class="panel-section">Export</div>
+    <button class="panel-btn muted" onclick="exportChat()">📤 Export Chat (TXT)</button>
+
+    <div class="panel-section">About</div>
+    <div style="font-size:12px;color:var(--muted);text-align:center;padding:8px 0;">
+      J-AI v2.0 — Johncross Artificial Intelligence<br>
+      7 Free AI APIs — 38 Upgrades Active
+    </div>
+
+    <button class="panel-btn primary" onclick="saveSettings()" style="margin-top:16px;">
+      ✔ Save & Apply
+    </button>
+    <button class="panel-btn muted" onclick="closeSettings()" style="margin-top:8px;">
+      Cancel
+    </button>
+  </div>
+</div>
+
+<!-- ATTACH MENU -->
+<div class="attach-menu" id="attachMenu">
+  <div class="attach-item" onclick="attachFile('image')">📷 &nbsp; Image</div>
+  <div class="attach-item" onclick="attachFile('document')">📄 &nbsp; Document</div>
+  <div class="attach-item" onclick="attachFile('voice')">🎤 &nbsp; Voice Note</div>
+  <div class="attach-item" onclick="attachFile('audio')">🎵 &nbsp; Audio/Music</div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- HIDDEN FILE INPUT -->
+<input type="file" id="fileInput" style="display:none" onchange="handleFile(this)">
+
+<script>
+const JAI = 'http://localhost:8080';
+let settings = JSON.parse(localStorage.getItem('jai_settings') || '{}');
+let history  = JSON.parse(localStorage.getItem('jai_history') || '[]');
+let thinking = false;
+let recognition = null;
+
+// Apply defaults
+settings = Object.assign({
+  user_name: 'Johncross',
+  response_style: 'Concise',
+  font_size: 14,
+  max_tokens: 1024,
+  auto_sync: true,
+  tts_enabled: false,
+  personality: 'Direct',
+  custom_prompt: ''
+}, settings);
+
+function saveToStorage() {
+  localStorage.setItem('jai_settings', JSON.stringify(settings));
+  localStorage.setItem('jai_history', JSON.stringify(history));
+}
+
+// INIT
+window.onload = () => {
+  applyFontSize();
+  updateDrawerUser();
+  loadSuggestions(['Latest news', 'Bitcoin price', 'Translate text',
+                   'Write my CV', 'Generate image', 'Search web']);
+  addBubble(
+    `Hello ${settings.user_name}! I am J-AI v2.0 — your advanced personal AI.\n\n` +
+    `Powered by 7 free AI engines.\n` +
+    `Ask me anything — news, crypto, documents, code, translation and more.`,
+    'ai', 'J-AI System'
+  );
+  loadHistoryUI();
+  if (settings.auto_sync) syncNow(true);
+};
+
+function applyFontSize() {
+  document.querySelectorAll('.bubble').forEach(b => {
+    b.style.fontSize = settings.font_size + 'px';
+  });
+}
+
+function updateDrawerUser() {
+  document.getElementById('drawerUser').textContent = settings.user_name;
+}
+
+// ADD BUBBLE
+function addBubble(text, role, meta='') {
+  const msgs = document.getElementById('messages');
+  const row  = document.createElement('div');
+  row.className = `bubble-row ${role}`;
+
+  const wrap = document.createElement('div');
+  wrap.className = 'bubble-wrap';
+
+  const bubble = document.createElement('div');
+  bubble.className = `bubble ${role}`;
+  bubble.style.fontSize = settings.font_size + 'px';
+  bubble.innerHTML = formatText(text);
+
+  const actions = document.createElement('div');
+  actions.className = 'bubble-actions';
+
+  const copyBtn = document.createElement('button');
+  copyBtn.className = 'action-btn';
+  copyBtn.textContent = 'Copy';
+  copyBtn.onclick = () => copyText(text);
+  actions.appendChild(copyBtn);
+
+  if (role === 'user') {
+    const editBtn = document.createElement('button');
+    editBtn.className = 'action-btn';
+    editBtn.textContent = 'Edit';
+    editBtn.onclick = () => {
+      document.getElementById('messageInput').value = text;
+      document.getElementById('messageInput').focus();
+    };
+    actions.appendChild(editBtn);
+  }
+
+  wrap.appendChild(bubble);
+  wrap.appendChild(actions);
+
+  if (meta) {
+    const metaEl = document.createElement('div');
+    metaEl.className = 'bubble-meta';
+    metaEl.textContent = meta;
+    wrap.appendChild(metaEl);
+  }
+
+  if (role === 'ai') {
+    const av = document.createElement('div');
+    av.className = 'bubble-avatar';
+    av.textContent = 'J';
+    row.appendChild(av);
+    row.appendChild(wrap);
+  } else {
+    row.appendChild(wrap);
+  }
+
+  msgs.appendChild(row);
+  msgs.scrollTop = msgs.scrollHeight;
+  return bubble;
+}
+
+function formatText(text) {
+  // Code blocks with copy button
+  text = text.replace(/```(\w+)?\n?([\s\S]*?)```/g, (match, lang, code) => {
+    const l = lang || 'code';
+    const id = 'code_' + Math.random().toString(36).substr(2,9);
+    return `<div class="code-block">
+      <div class="code-header">
+        <span>${l}</span>
+        <button class="copy-code-btn" onclick="copyCode('${id}')">Copy</button>
+      </div>
+      <pre id="${id}">${escHtml(code.trim())}</pre>
+    </div>`;
+  });
+  // Bold
+  text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  // Italic
+  text = text.replace(/\*(.*?)\*/g, '<em>$1</em>');
+  return text;
+}
+
+function escHtml(text) {
+  return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function copyCode(id) {
+  const el = document.getElementById(id);
+  if (el) copyText(el.textContent);
+}
+
+function copyText(text) {
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(() => showToast('Copied!'));
+  } else {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast('Copied!');
+  }
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+// TYPING INDICATOR
+function showTyping() {
+  const msgs = document.getElementById('messages');
+  const row  = document.createElement('div');
+  row.className = 'bubble-row ai';
+  row.id = 'typing';
+  const av = document.createElement('div');
+  av.className = 'bubble-avatar';
+  av.textContent = 'J';
+  const typing = document.createElement('div');
+  typing.className = 'typing';
+  typing.innerHTML = '<span></span><span></span><span></span>';
+  row.appendChild(av);
+  row.appendChild(typing);
+  msgs.appendChild(row);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function hideTyping() {
+  const t = document.getElementById('typing');
+  if (t) t.remove();
+}
+
+// SEND MESSAGE
+async function sendMessage() {
+  const input = document.getElementById('messageInput');
+  const text  = input.value.trim();
+  if (!text || thinking) return;
+  input.value = '';
+  input.style.height = 'auto';
+  thinking = true;
+  document.getElementById('apiStatus').textContent = 'thinking...';
+
+  addBubble(text, 'user');
+  showTyping();
+
+  history.push({role:'user', content:text});
+
+  try {
+    const resp = await fetch(`${JAI}/chat`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        message:  text,
+        session:  'default',
+        style:    settings.response_style,
+        persona:  settings.personality,
+        tokens:   settings.max_tokens,
+      })
+    });
+    const data = await resp.json();
+    hideTyping();
+    const response = data.response || 'No response.';
+    const api      = data.api || '?';
+    const elapsed  = data.elapsed || '?';
+    const tool     = data.tool ? ` • ${data.tool}` : '';
+    const ts       = data.timestamp || '';
+    const meta     = `${api} • ${elapsed}s • ${ts}${tool}`;
+
+    addBubble(response, 'ai', meta);
+    document.getElementById('apiStatus').textContent = api;
+
+    history.push({role:'assistant', content:response});
+    saveToStorage();
+
+    // Smart suggestions
+    updateSuggestions(text, response);
+
+    // TTS
+    if (settings.tts_enabled && 'speechSynthesis' in window) {
+      const utt = new SpeechSynthesisUtterance(response.substring(0,500));
+      speechSynthesis.speak(utt);
+    }
+
+  } catch(e) {
+    hideTyping();
+    addBubble(`Error: ${e.message}. Make sure J-AI server is running in Termux.`, 'ai');
+    document.getElementById('apiStatus').textContent = 'offline';
+  }
+  thinking = false;
+}
+
+function updateSuggestions(userMsg, aiMsg) {
+  const t = userMsg.toLowerCase();
+  if (t.includes('crypto') || t.includes('bitcoin'))
+    return loadSuggestions(['All crypto prices','Bitcoin analysis','Best crypto?','What is DeFi?']);
+  if (t.includes('cv') || t.includes('resume'))
+    return loadSuggestions(['Improve CV further','Write cover letter','Interview tips','Salary negotiation']);
+  if (t.includes('code') || t.includes('python'))
+    return loadSuggestions(['Run this code','Explain the code','Fix bugs','Optimise code']);
+  if (t.includes('news'))
+    return loadSuggestions(['Tech news','Africa news','Business news','Sports news']);
+  loadSuggestions(['Tell me more','Give examples','Summarise that','How do I do this?']);
+}
+
+function loadSuggestions(items) {
+  const bar = document.getElementById('suggestions');
+  bar.innerHTML = '';
+  items.forEach(s => {
+    const btn = document.createElement('button');
+    btn.className = 'sugg-btn';
+    btn.textContent = s;
+    btn.onclick = () => {
+      document.getElementById('messageInput').value = s;
+      sendMessage();
+    };
+    bar.appendChild(btn);
+  });
+}
+
+function loadHistoryUI() {
+  history.slice(-20).forEach(msg => {
+    if (msg.role !== 'system')
+      addBubble(msg.content, msg.role === 'user' ? 'user' : 'ai');
+  });
+}
+
+// VOICE INPUT
+function startVoice() {
+  if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+    showToast('Voice not supported on this browser');
+    return;
+  }
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SR();
+  recognition.lang = 'en-US';
+  recognition.continuous = false;
+  recognition.interimResults = false;
+  recognition.onstart = () => {
+    document.getElementById('micBtn').style.color = '#EF4444';
+    showToast('Listening...');
+  };
+  recognition.onresult = (e) => {
+    const text = e.results[0][0].transcript;
+    document.getElementById('messageInput').value = text;
+    document.getElementById('micBtn').style.color = '';
+  };
+  recognition.onerror = () => {
+    document.getElementById('micBtn').style.color = '';
+    showToast('Voice error — try again');
+  };
+  recognition.onend = () => {
+    document.getElementById('micBtn').style.color = '';
+  };
+  recognition.start();
+}
+
+// ATTACH
+function toggleAttach() {
+  document.getElementById('attachMenu').classList.toggle('open');
+}
+
+function attachFile(type) {
+  document.getElementById('attachMenu').classList.remove('open');
+  const input = document.getElementById('fileInput');
+  if (type === 'image') input.accept = 'image/*';
+  else if (type === 'document') input.accept = '.pdf,.doc,.docx,.txt';
+  else if (type === 'voice' || type === 'audio') input.accept = 'audio/*';
+  input.click();
+}
+
+async function handleFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  addBubble(`📎 Attached: ${file.name}`, 'user');
+  const formData = new FormData();
+  formData.append('file', file);
+  showTyping();
+  try {
+    const resp = await fetch(`${JAI}/scan`, {method:'POST', body:formData});
+    const data = await resp.json();
+    hideTyping();
+    addBubble(data.analysis || 'File processed.', 'ai');
+  } catch(e) {
+    hideTyping();
+    addBubble(`File error: ${e.message}`, 'ai');
+  }
+  input.value = '';
+}
+
+// DRAWER
+function toggleDrawer() {
+  document.getElementById('drawer').classList.toggle('open');
+  document.getElementById('drawerOverlay').classList.toggle('open');
+}
+
+function closeDrawer() {
+  document.getElementById('drawer').classList.remove('open');
+  document.getElementById('drawerOverlay').classList.remove('open');
+}
+
+function quickAction(text) {
+  closeDrawer();
+  document.getElementById('messageInput').value = text;
+  document.getElementById('messageInput').focus();
+}
+
+function newChat() {
+  closeDrawer();
+  document.getElementById('messages').innerHTML = '';
+  history = [];
+  saveToStorage();
+  addBubble('New conversation started. Ask me anything!', 'ai');
+  loadSuggestions(['Latest news','Bitcoin price','Translate text','Write my CV','Generate image','Search web']);
+}
+
+async function syncNow(silent=false) {
+  closeDrawer();
+  try {
+    await fetch(`${JAI}/sync`, {method:'POST'});
+    if (!silent) {
+      showToast('Sync complete!');
+      addBubble('Sync completed! Data is up to date.', 'ai');
+    }
+  } catch(e) {
+    if (!silent) showToast('Sync failed');
+  }
+}
+
+function exportChat() {
+  closeDrawer();
+  let txt = '';
+  history.forEach(m => {
+    const role = m.role === 'user' ? 'You' : 'J-AI';
+    txt += `[${role}]\n${m.content}\n\n`;
+  });
+  const blob = new Blob([txt], {type:'text/plain'});
+  const a    = document.createElement('a');
+  a.href     = URL.createObjectURL(blob);
+  a.download = 'jai_chat.txt';
+  a.click();
+  showToast('Chat exported!');
+}
+
+function showAbout() {
+  closeDrawer();
+  addBubble(
+    'J-AI v2.0 — Johncross Artificial Intelligence\n' +
+    '7 Free AI APIs — 38 Upgrades Active\n' +
+    'Backend: Flask server on Termux\n' +
+    'Always learning, always improving.',
+    'ai'
+  );
+}
+
+function clearHistory() {
+  history = [];
+  saveToStorage();
+  fetch(`${JAI}/clear`, {method:'POST'}).catch(()=>{});
+  showToast('History cleared');
+  closeSettings();
+}
+
+// SETTINGS
+function openSettings() {
+  closeDrawer();
+  document.getElementById('settingName').value      = settings.user_name;
+  document.getElementById('settingStyle').value     = settings.response_style;
+  document.getElementById('settingPersonality').value = settings.personality;
+  document.getElementById('settingFontSize').value  = settings.font_size;
+  document.getElementById('fontSizeLabel').textContent = settings.font_size;
+  document.getElementById('settingTokens').value    = settings.max_tokens;
+  document.getElementById('tokensLabel').textContent = settings.max_tokens;
+  document.getElementById('settingPrompt').value    = settings.custom_prompt || '';
+  document.getElementById('toggleSync').className   = 'toggle' + (settings.auto_sync ? ' on' : '');
+  document.getElementById('toggleTTS').className    = 'toggle' + (settings.tts_enabled ? ' on' : '');
+  document.getElementById('settingsPanel').classList.add('open');
+}
+
+function closeSettings() {
+  document.getElementById('settingsPanel').classList.remove('open');
+}
+
+function saveSettings() {
+  settings.user_name      = document.getElementById('settingName').value.trim() || 'Johncross';
+  settings.response_style = document.getElementById('settingStyle').value;
+  settings.personality    = document.getElementById('settingPersonality').value;
+  settings.font_size      = parseInt(document.getElementById('settingFontSize').value);
+  settings.max_tokens     = parseInt(document.getElementById('settingTokens').value);
+  settings.custom_prompt  = document.getElementById('settingPrompt').value.trim();
+  settings.auto_sync      = document.getElementById('toggleSync').classList.contains('on');
+  settings.tts_enabled    = document.getElementById('toggleTTS').classList.contains('on');
+  saveToStorage();
+  applyFontSize();
+  updateDrawerUser();
+  closeSettings();
+  showToast('Settings saved!');
+}
+
+// AUTO RESIZE TEXTAREA
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+// CLOSE ATTACH ON OUTSIDE CLICK
+document.addEventListener('click', (e) => {
+  const menu = document.getElementById('attachMenu');
+  if (menu.classList.contains('open') &&
+      !e.target.closest('.attach-menu') &&
+      !e.target.closest('.attach-btn')) {
+    menu.classList.remove('open');
+  }
+});
+</script>
+</body>
+</html>
