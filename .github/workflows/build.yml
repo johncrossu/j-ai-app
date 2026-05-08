@@ -1,23 +1,48 @@
 name: Build J-AI WebView APK
+
 on:
   push:
     branches: [ main ]
   workflow_dispatch:
+
 jobs:
   build:
     runs-on: ubuntu-22.04
     timeout-minutes: 30
+
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
-      - uses: android-actions/setup-android@v3
-      - run: yes | sdkmanager --licenses 2>/dev/null || true
-      - run: sdkmanager "platforms;android-34" "build-tools;34.0.0" 2>/dev/null || true
-      - run: chmod +x gradlew && ./gradlew assembleDebug --stacktrace
-      - uses: actions/upload-artifact@v4
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install SDK components
+        run: |
+          yes | sdkmanager --licenses 2>/dev/null || true
+          sdkmanager "platforms;android-34" "build-tools;34.0.0" 2>/dev/null || true
+
+      - name: Install Gradle 8.7
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.7'
+
+      - name: Create build files
+        run: |
+          printf 'buildscript {\n  repositories { google(); mavenCentral() }\n  dependencies { classpath "com.android.tools.build:gradle:8.1.4" }\n}\nallprojects { repositories { google(); mavenCentral() } }\n' > build.gradle
+          printf 'include ":app"\nrootProject.name = "J-AI"\n' > settings.gradle
+          printf 'apply plugin: "com.android.application"\nandroid {\n  compileSdkVersion 34\n  defaultConfig {\n    applicationId "com.johncross.jai"\n    minSdkVersion 21\n    targetSdkVersion 34\n    versionCode 200\n    versionName "2.0"\n  }\n  buildTypes { debug { minifyEnabled false } }\n  compileOptions {\n    sourceCompatibility JavaVersion.VERSION_1_8\n    targetCompatibility JavaVersion.VERSION_1_8\n  }\n}\ndependencies {\n  implementation "androidx.appcompat:appcompat:1.6.1"\n  implementation "androidx.webkit:webkit:1.8.0"\n}\n' > app/build.gradle
+
+      - name: Build APK
+        run: gradle assembleDebug --stacktrace
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
         with:
           name: J-AI-WebView-APK
           path: app/build/outputs/apk/debug/*.apk
