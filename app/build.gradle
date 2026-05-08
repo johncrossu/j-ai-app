@@ -1,26 +1,20 @@
-plugins {
-    id 'com.android.application'
-}
+apply plugin: 'com.android.application'
 
 android {
-    namespace 'com.johncross.jai'
-    compileSdk 35
+    compileSdkVersion 35
+    buildToolsVersion "34.0.0"
 
     defaultConfig {
         applicationId "com.johncross.jai"
-        minSdk 21
-        targetSdk 35
+        minSdkVersion 21
+        targetSdkVersion 35
         versionCode 200
         versionName "2.0"
     }
 
     buildTypes {
-        debug {
-            minifyEnabled false
-        }
-        release {
-            minifyEnabled false
-        }
+        debug { minifyEnabled false }
+        release { minifyEnabled false }
     }
 
     compileOptions {
