@@ -14,32 +14,86 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
 
       - name: Setup Android SDK
-        uses: android-actions/setup-android@v2
+        uses: android-actions/setup-android@v3
 
       - name: Accept licenses
         run: yes | sdkmanager --licenses 2>/dev/null || true
 
-      - name: Install build tools
-        run: sdkmanager "platforms;android-35" "build-tools;34.0.0" 2>/dev/null || true
-
-      - name: Install Gradle 8.0
+      - name: Install required SDK
         run: |
-          wget -q https://services.gradle.org/distributions/gradle-8.0-bin.zip
-          unzip -q gradle-8.0-bin.zip -d /opt/gradle
-          export PATH=/opt/gradle/gradle-8.0/bin:$PATH
-          echo "PATH=/opt/gradle/gradle-8.0/bin:$PATH" >> $GITHUB_ENV
-          gradle --version
+          sdkmanager "platforms;android-34" "build-tools;34.0.0" 2>/dev/null || true
+
+      - name: Update build files for compatibility
+        run: |
+          cat > build.gradle << 'GRADLE'
+plugins {
+    id 'com.android.application' version '7.4.2' apply false
+}
+GRADLE
+          cat > app/build.gradle << 'GRADLE'
+plugins {
+    id 'com.android.application'
+}
+android {
+    namespace 'com.johncross.jai'
+    compileSdk 34
+    defaultConfig {
+        applicationId "com.johncross.jai"
+        minSdk 21
+        targetSdk 34
+        versionCode 200
+        versionName "2.0"
+    }
+    buildTypes {
+        debug { minifyEnabled false }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'androidx.webkit:webkit:1.8.0'
+}
+GRADLE
+          cat > settings.gradle << 'GRADLE'
+pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+rootProject.name = "J-AI"
+include ':app'
+GRADLE
+          cat > gradle/wrapper/gradle-wrapper.properties << 'GRADLE'
+distributionBase=GRADLE_USER_HOME
+distributionPath=wrapper/dists
+zipStoreBase=GRADLE_USER_HOME
+zipStorePath=wrapper/dists
+distributionUrl=https\://services.gradle.org/distributions/gradle-7.5-bin.zip
+GRADLE
+
+      - name: Make gradlew executable
+        run: chmod +x gradlew
 
       - name: Build APK
-        run: |
-          export PATH=/opt/gradle/gradle-8.0/bin:$PATH
-          gradle assembleDebug --project-dir . --stacktrace
+        run: ./gradlew assembleDebug --stacktrace
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
@@ -47,6 +101,3 @@ jobs:
           name: J-AI-WebView-APK
           path: app/build/outputs/apk/debug/*.apk
           retention-days: 30
-
-      - name: Show result
-        run: find . -name "*.apk" 2>/dev/null || echo "No APK found"
