@@ -36,7 +36,7 @@ jobs:
         run: |
           printf 'buildscript {\n  repositories { google(); mavenCentral() }\n  dependencies { classpath "com.android.tools.build:gradle:8.1.4" }\n}\nallprojects { repositories { google(); mavenCentral() } }\n' > build.gradle
           printf 'include ":app"\nrootProject.name = "J-AI"\n' > settings.gradle
-          printf 'apply plugin: "com.android.application"\nandroid {\n  compileSdkVersion 34\n  defaultConfig {\n    applicationId "com.johncross.jai"\n    minSdkVersion 21\n    targetSdkVersion 34\n    versionCode 200\n    versionName "2.0"\n  }\n  buildTypes { debug { minifyEnabled false } }\n  compileOptions {\n    sourceCompatibility JavaVersion.VERSION_1_8\n    targetCompatibility JavaVersion.VERSION_1_8\n  }\n}\ndependencies {\n  implementation "androidx.appcompat:appcompat:1.6.1"\n  implementation "androidx.webkit:webkit:1.8.0"\n}\n' > app/build.gradle
+          printf 'apply plugin: "com.android.application"\nandroid {\n  namespace "com.johncross.jai"\n  compileSdkVersion 34\n  defaultConfig {\n    applicationId "com.johncross.jai"\n    minSdkVersion 21\n    targetSdkVersion 34\n    versionCode 200\n    versionName "2.0"\n  }\n  buildTypes { debug { minifyEnabled false } }\n  compileOptions {\n    sourceCompatibility JavaVersion.VERSION_1_8\n    targetCompatibility JavaVersion.VERSION_1_8\n  }\n}\ndependencies {\n  implementation "androidx.appcompat:appcompat:1.6.1"\n  implementation "androidx.webkit:webkit:1.8.0"\n}\n' > app/build.gradle
 
       - name: Build APK
         run: gradle assembleDebug --stacktrace
