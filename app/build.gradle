@@ -1,33 +1,25 @@
-apply plugin: 'com.android.application'
+plugins {
+    id 'com.android.application'
+}
 
 android {
-    compileSdkVersion 35
-    buildToolsVersion "34.0.0"
+    namespace 'com.johncross.jai'
+    compileSdk 35
 
     defaultConfig {
         applicationId "com.johncross.jai"
-        minSdkVersion 21
-        targetSdkVersion 35
+        minSdk 21
+        targetSdk 35
         versionCode 200
         versionName "2.0"
     }
 
-    signingConfigs {
-        release {
-            storeFile file("j-ai-release.jks")
-            storePassword "johncross123"
-            keyAlias "j-ai"
-            keyPassword "johncross123"
-        }
-    }
-
     buildTypes {
+        debug {
+            minifyEnabled false
+        }
         release {
             minifyEnabled false
-            signingConfig signingConfigs.release
-        }
-        debug {
-            applicationIdSuffix ""
         }
     }
 
