@@ -2,11 +2,11 @@ apply plugin: 'com.android.application'
 
 android {
     namespace 'com.johncross.jai'
-    compileSdkVersion 35
+    compileSdkVersion 34
     defaultConfig {
         applicationId "com.johncross.jai"
         minSdkVersion 21
-        targetSdkVersion 35
+        targetSdkVersion 34
         versionCode 300
         versionName "3.0"
     }
