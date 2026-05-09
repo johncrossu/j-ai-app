@@ -32,39 +32,15 @@ jobs:
         with:
           gradle-version: '8.7'
 
-      - name: Create build configuration
-        run: |
-          printf 'buildscript {\n  repositories { google(); mavenCentral() }\n  dependencies { classpath "com.android.tools.build:gradle:8.1.4" }\n}\nallprojects { repositories { google(); mavenCentral() } }\n' > build.gradle
-          printf 'include ":app"\nrootProject.name = "J-AI"\n' > settings.gradle
+      - name: Create root build.gradle
+        run: printf 'buildscript {\n  repositories { google(); mavenCentral() }\n  dependencies { classpath "com.android.tools.build:gradle:8.1.4" }\n}\nallprojects { repositories { google(); mavenCentral() } }\n' > build.gradle
+
+      - name: Create settings.gradle
+        run: printf 'include ":app"\nrootProject.name = "J-AI"\n' > settings.gradle
 
       - name: Create app build.gradle
         run: |
-          cat > app/build.gradle << 'GRADLE'
-apply plugin: 'com.android.application'
-android {
-  namespace 'com.johncross.jai'
-  compileSdkVersion 35
-  defaultConfig {
-    applicationId "com.johncross.jai"
-    minSdkVersion 21
-    targetSdkVersion 35
-    versionCode 300
-    versionName "3.0"
-  }
-  buildTypes {
-    debug { minifyEnabled false; debuggable true }
-  }
-  compileOptions {
-    sourceCompatibility JavaVersion.VERSION_1_8
-    targetCompatibility JavaVersion.VERSION_1_8
-  }
-}
-dependencies {
-  implementation 'androidx.appcompat:appcompat:1.6.1'
-  implementation 'androidx.webkit:webkit:1.8.0'
-  implementation 'androidx.core:core:1.12.0'
-}
-GRADLE
+          printf 'apply plugin: "com.android.application"\nandroid {\n  namespace "com.johncross.jai"\n  compileSdkVersion 35\n  defaultConfig {\n    applicationId "com.johncross.jai"\n    minSdkVersion 21\n    targetSdkVersion 35\n    versionCode 300\n    versionName "3.0"\n  }\n  buildTypes {\n    debug { minifyEnabled false }\n  }\n  compileOptions {\n    sourceCompatibility JavaVersion.VERSION_1_8\n    targetCompatibility JavaVersion.VERSION_1_8\n  }\n}\ndependencies {\n  implementation "androidx.appcompat:appcompat:1.6.1"\n  implementation "androidx.webkit:webkit:1.8.0"\n  implementation "androidx.core:core:1.12.0"\n}\n' > app/build.gradle
 
       - name: Build APK
         run: gradle assembleDebug --stacktrace
@@ -76,7 +52,5 @@ GRADLE
           path: app/build/outputs/apk/debug/app-debug.apk
           retention-days: 30
 
-      - name: Build result
-        run: |
-          echo "=== BUILD COMPLETE ==="
-          find . -name "*.apk" -exec ls -lh {} \;
+      - name: Show result
+        run: find . -name "*.apk" -exec ls -lh {} \; 2>/dev/null || echo "No APK found"
