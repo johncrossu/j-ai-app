@@ -1,4 +1,4 @@
-name: Build J-AI WebView APK
+name: Build J-AI APK v3.0
 
 on:
   push:
@@ -22,21 +22,49 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Install SDK components
+      - name: Accept licenses and install SDK
         run: |
           yes | sdkmanager --licenses 2>/dev/null || true
-          sdkmanager "platforms;android-34" "build-tools;34.0.0" 2>/dev/null || true
+          sdkmanager "platforms;android-35" "build-tools;34.0.0" 2>/dev/null || true
 
-      - name: Install Gradle 8.7
+      - name: Setup Gradle 8.7
         uses: gradle/actions/setup-gradle@v3
         with:
           gradle-version: '8.7'
 
-      - name: Create build files
+      - name: Create build configuration
         run: |
           printf 'buildscript {\n  repositories { google(); mavenCentral() }\n  dependencies { classpath "com.android.tools.build:gradle:8.1.4" }\n}\nallprojects { repositories { google(); mavenCentral() } }\n' > build.gradle
           printf 'include ":app"\nrootProject.name = "J-AI"\n' > settings.gradle
-          printf 'apply plugin: "com.android.application"\nandroid {\n  namespace "com.johncross.jai"\n  compileSdkVersion 34\n  defaultConfig {\n    applicationId "com.johncross.jai"\n    minSdkVersion 21\n    targetSdkVersion 34\n    versionCode 200\n    versionName "2.0"\n  }\n  buildTypes { debug { minifyEnabled false } }\n  compileOptions {\n    sourceCompatibility JavaVersion.VERSION_1_8\n    targetCompatibility JavaVersion.VERSION_1_8\n  }\n}\ndependencies {\n  implementation "androidx.appcompat:appcompat:1.6.1"\n  implementation "androidx.webkit:webkit:1.8.0"\n}\n' > app/build.gradle
+
+      - name: Create app build.gradle
+        run: |
+          cat > app/build.gradle << 'GRADLE'
+apply plugin: 'com.android.application'
+android {
+  namespace 'com.johncross.jai'
+  compileSdkVersion 35
+  defaultConfig {
+    applicationId "com.johncross.jai"
+    minSdkVersion 21
+    targetSdkVersion 35
+    versionCode 300
+    versionName "3.0"
+  }
+  buildTypes {
+    debug { minifyEnabled false; debuggable true }
+  }
+  compileOptions {
+    sourceCompatibility JavaVersion.VERSION_1_8
+    targetCompatibility JavaVersion.VERSION_1_8
+  }
+}
+dependencies {
+  implementation 'androidx.appcompat:appcompat:1.6.1'
+  implementation 'androidx.webkit:webkit:1.8.0'
+  implementation 'androidx.core:core:1.12.0'
+}
+GRADLE
 
       - name: Build APK
         run: gradle assembleDebug --stacktrace
@@ -44,6 +72,11 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: J-AI-WebView-APK
-          path: app/build/outputs/apk/debug/*.apk
+          name: J-AI-v3.0-APK
+          path: app/build/outputs/apk/debug/app-debug.apk
           retention-days: 30
+
+      - name: Build result
+        run: |
+          echo "=== BUILD COMPLETE ==="
+          find . -name "*.apk" -exec ls -lh {} \;
