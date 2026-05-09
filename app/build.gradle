@@ -3,7 +3,6 @@ apply plugin: 'com.android.application'
 android {
     namespace 'com.johncross.jai'
     compileSdkVersion 35
-
     defaultConfig {
         applicationId "com.johncross.jai"
         minSdkVersion 21
@@ -11,25 +10,12 @@ android {
         versionCode 300
         versionName "3.0"
     }
-
     buildTypes {
-        debug {
-            minifyEnabled false
-            debuggable true
-        }
-        release {
-            minifyEnabled false
-        }
+        debug { minifyEnabled false }
     }
-
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
-    }
-
-    packagingOptions {
-        pickFirst 'META-INF/LICENSE.txt'
-        pickFirst 'META-INF/NOTICE.txt'
     }
 }
 
