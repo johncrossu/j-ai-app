@@ -25,22 +25,62 @@ jobs:
       - name: Accept licenses and install SDK
         run: |
           yes | sdkmanager --licenses 2>/dev/null || true
-          sdkmanager "platforms;android-35" "build-tools;34.0.0" 2>/dev/null || true
+          sdkmanager "platforms;android-34" "build-tools;34.0.0" 2>/dev/null || true
 
       - name: Setup Gradle 8.7
         uses: gradle/actions/setup-gradle@v3
         with:
           gradle-version: '8.7'
 
-      - name: Create root build.gradle
-        run: printf 'buildscript {\n  repositories { google(); mavenCentral() }\n  dependencies { classpath "com.android.tools.build:gradle:8.1.4" }\n}\nallprojects { repositories { google(); mavenCentral() } }\n' > build.gradle
-
-      - name: Create settings.gradle
-        run: printf 'include ":app"\nrootProject.name = "J-AI"\n' > settings.gradle
-
-      - name: Create app build.gradle
+      - name: Write build files
         run: |
-          printf 'apply plugin: "com.android.application"\nandroid {\n  namespace "com.johncross.jai"\n  compileSdkVersion 35\n  defaultConfig {\n    applicationId "com.johncross.jai"\n    minSdkVersion 21\n    targetSdkVersion 35\n    versionCode 300\n    versionName "3.0"\n  }\n  buildTypes {\n    debug { minifyEnabled false }\n  }\n  compileOptions {\n    sourceCompatibility JavaVersion.VERSION_1_8\n    targetCompatibility JavaVersion.VERSION_1_8\n  }\n}\ndependencies {\n  implementation "androidx.appcompat:appcompat:1.6.1"\n  implementation "androidx.webkit:webkit:1.8.0"\n  implementation "androidx.core:core:1.12.0"\n}\n' > app/build.gradle
+          cat > build.gradle << 'GRADLE'
+buildscript {
+    repositories { google(); mavenCentral() }
+    dependencies { classpath "com.android.tools.build:gradle:8.1.4" }
+}
+allprojects { repositories { google(); mavenCentral() } }
+GRADLE
+          cat > settings.gradle << 'GRADLE'
+include ':app'
+rootProject.name = 'J-AI'
+GRADLE
+          cat > gradle.properties << 'GRADLE'
+android.useAndroidX=true
+android.enableJetifier=true
+android.suppressUnsupportedCompileSdk=34
+GRADLE
+          cat > app/build.gradle << 'GRADLE'
+apply plugin: 'com.android.application'
+android {
+    namespace 'com.johncross.jai'
+    compileSdkVersion 34
+    defaultConfig {
+        applicationId "com.johncross.jai"
+        minSdkVersion 21
+        targetSdkVersion 34
+        versionCode 300
+        versionName "3.0"
+    }
+    buildTypes {
+        debug { minifyEnabled false }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+configurations.all {
+    exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk7'
+    exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk8'
+}
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'androidx.webkit:webkit:1.8.0'
+    implementation 'androidx.core:core:1.12.0'
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib:1.8.22'
+}
+GRADLE
 
       - name: Build APK
         run: gradle assembleDebug --stacktrace
