@@ -1,0 +1,19 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.johncross.jai.app-mergeReleaseResources-30:/values-w320dp-land-v13/values-w320dp-land-v13.xml",
+            "map": [
+                {
+                    "source": "/data/data/com.termux/files/home/.gradle/caches/9.5.1/transforms/1bf7b8d329ed93034134ef32eb56d186/transformed/material-1.12.0/res/values-w320dp-land-v13/values-w320dp-land-v13.xml",
+                    "from": {
+                        "startLines": "2,3",
+                        "startColumns": "4,4",
+                        "startOffsets": "55,110",
+                        "endColumns": "54,61",
+                        "endOffsets": "105,167"
+                    }
+                }
+            ]
+        }
+    ]
+}
