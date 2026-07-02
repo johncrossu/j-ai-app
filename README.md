@@ -1,1 +1,7 @@
-# J-AI v2.0 with custom icon
+# J-AI
+Android AI assistant project.
+
+## Highlights
+- AI-powered assistant
+- Mobile application
+- Prototype demonstrating AI workflow concepts
